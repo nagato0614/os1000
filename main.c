@@ -1,10 +1,6 @@
 #include "kernel.h"
 #include "common.h"
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint32_t;
-typedef uint32_t size_t;
-
 extern char __bss[];
 extern char __bss_end[];
 extern char __stack_top[];
@@ -44,13 +40,6 @@ void putchar(char ch)
   sbi_call(ch, 0, 0, 0, 0, 0, 0, 1);
 }
 
-void *memset(void *buf, char c, size_t n)
-{
-  uint8_t *p = (uint8_t *) buf;
-  while (n--)
-    *p++ = c;
-  return buf;
-}
 
 void kernel_main(void)
 {
