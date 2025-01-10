@@ -6,11 +6,18 @@
 #define OS1000__KERNEL_H_
 #include "common.h"
 
-#define PANIC(fmt, ...)                                                   \
-  do {                                                                    \
-    printf("PANIC: %s:%d " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
-    while(1) {}                                                           \
-  } while(0)
+#define PROCS_MAX 8     // プロセス数の最大値
+#define PROC_UNUSED 0   // 未使用のプロセス管理構造体
+#define PROC_RUNNABLE 1 // 実行可能なプロセス管理構造体
+#define KERNEL_STACK_SIZE 8192
+
+struct process
+{
+  int pid;
+  int status;
+  vaddr_t sp;
+  uint8_t stack[KERNEL_STACK_SIZE];
+};
 
 struct sbiret
 {
@@ -65,4 +72,11 @@ struct trap_frame
         uint32_t __tmp = (value);                                              \
         __asm__ __volatile__("csrw " #reg ", %0" ::"r"(__tmp));                \
     } while (0)
+
+#define PANIC(fmt, ...)                                                   \
+  do {                                                                    \
+    printf("PANIC: %s:%d " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
+    while(1) {}                                                           \
+  } while(0)
+
 #endif //OS1000__KERNEL_H_
