@@ -26,7 +26,7 @@ __attribute__((aligned(4)))
 void kernel_entry(void)
 {
   __asm__ __volatile__(
-    "csrw sscratch, sp\n"
+    "csrw sp, sscratch, sp\n"
     "addi sp, sp, -4 * 31\n"
     "sw ra,  4 * 0(sp)\n"
     "sw gp,  4 * 1(sp)\n"
@@ -59,8 +59,14 @@ void kernel_entry(void)
     "sw s10, 4 * 28(sp)\n"
     "sw s11, 4 * 29(sp)\n"
 
+    // 例外発生時のspを取り出して保存
     "csrr a0, sscratch\n"
-    "sw a0, 4 * 30(sp)\n"
+    "sw a0,  4 * 30(sp)\n"
+
+    // カーネルスタックを設定し直す
+    "addi a0, sp, 4 * 31\n"
+    "csrw sscratch, a0\n"
+
 
     "mv a0, sp\n"
     "call handle_trap\n"
@@ -216,7 +222,7 @@ struct process *create_process(uint32_t pc)
   int i;
   for (i = 0; i < PROCS_MAX; i++)
   {
-    if (procs[i].status == PROC_UNUSED)
+    if (procs[i].state == PROC_UNUSED)
     {
       proc = &procs[i];
       break;
@@ -245,7 +251,7 @@ struct process *create_process(uint32_t pc)
 
   // 各フィールドを初期化
   proc->pid = i + 1;
-  proc->status = PROC_RUNNABLE;
+  proc->state = PROC_RUNNABLE;
   proc->sp = (uint32_t) sp;
   return proc;
 }
@@ -282,28 +288,35 @@ void proc_b_entry(void)
 
 void yield(void)
 {
+  // 実行可能なプロセスを探す
   struct process *next = idle_proc;
   for (int i = 0; i < PROCS_MAX; i++)
   {
     struct process *proc = &procs[(current_proc->pid + i) % PROCS_MAX];
-    if (proc->status == PROC_RUNNABLE && proc->pid > 0)
+    if (proc->state == PROC_RUNNABLE && proc->pid > 0)
     {
       next = proc;
       break;
     }
   }
 
-  // 現在実行中のプロセス以外に, 実行可能なプロセスがない場合は, idleプロセスを実行する
+  // 現在実行中のプロセス以外に、実行可能なプロセスがない。戻って処理を続行する
   if (next == current_proc)
   {
-    next = idle_proc;
+    return;
   }
 
+  __asm__ __volatile__(
+    "csrw sscratch, %[sscratch]\n"
+    :
+    : [sscratch] "r"((uint32_t) &next->stack[sizeof(next->stack)])
+  );
+
+  // コンテキストスイッチ
   struct process *prev = current_proc;
   current_proc = next;
   switch_context(&prev->sp, &next->sp);
 }
-
 void kernel_main(void)
 {
   memset(__bss, 0, (size_t) __bss_end - (size_t) __bss);

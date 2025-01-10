@@ -14,7 +14,7 @@
 struct process
 {
   int pid;
-  int status;
+  int state;
   vaddr_t sp;
   uint8_t stack[KERNEL_STACK_SIZE];
 };
