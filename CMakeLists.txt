@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 17)
 
 # main.c と common.c をコンパイルし、kernel.elf を出力
 add_executable(kernel.elf
-        main.c
+        kernel.c
         common.c
 )
 
