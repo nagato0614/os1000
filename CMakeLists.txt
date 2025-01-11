@@ -36,19 +36,21 @@ target_link_options(shell.elf PRIVATE
 # shell.elf を shell.bin に変換
 add_custom_command(
         OUTPUT shell.bin
-        COMMAND ${OBJCOPY} --set-section-flags .bss=alloc,contents -O binary ${CMAKE_BINARY_DIR}/shell.elf ${CMAKE_BINARY_DIR}/shell.bin
+        COMMAND ${OBJCOPY} --set-section-flags .bss=alloc,contents -O binary shell.elf shell.bin
         DEPENDS shell.elf
         COMMENT "Converting shell.elf to shell.bin"
         VERBATIM
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 # shell.bin を shell.bin.o に変換
 add_custom_command(
         OUTPUT shell.bin.o
-        COMMAND ${OBJCOPY} -I binary -O elf32-littleriscv ${CMAKE_BINARY_DIR}/shell.bin ${CMAKE_BINARY_DIR}/shell.bin.o
+        COMMAND ${OBJCOPY} -I binary -O elf32-littleriscv shell.bin shell.bin.o
         DEPENDS shell.bin
         COMMENT "Converting shell.bin to shell.bin.o"
         VERBATIM
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 # ======== shell.bin.o を生成するカスタムターゲット ========

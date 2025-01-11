@@ -9,7 +9,10 @@
 #define PROCS_MAX 8     // プロセス数の最大値
 #define PROC_UNUSED 0   // 未使用のプロセス管理構造体
 #define PROC_RUNNABLE 1 // 実行可能なプロセス管理構造体
+#define PROC_EXITED   2
 #define KERNEL_STACK_SIZE 8192
+
+#define SCAUSE_ECALL 8
 
 // ページテーブルエントリ
 #define SATP_SV32 (1u << 31)
@@ -18,6 +21,10 @@
 #define PAGE_W (1u << 2) // 書き込み可能
 #define PAGE_X (1u << 3) // 実行可能
 #define PAGE_U (1u << 4) // ユーザーモードで実行可能
+
+#define SSTATUS_SPIE (1u << 5)
+
+#define USER_BASE 0x1000000
 
 struct process
 {
