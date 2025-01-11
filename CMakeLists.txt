@@ -53,6 +53,24 @@ add_custom_command(
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
+# disk ディレクトリを丸ごとビルドディレクトリにコピー
+file(COPY disk DESTINATION ${CMAKE_BINARY_DIR})
+
+# disk ディレクトリを tar アーカイブ化するカスタムコマンド
+add_custom_command(
+        OUTPUT disk.tar
+        COMMAND tar cf ../disk.tar --format=ustar hello.txt meow.txt
+        DEPENDS shell.bin
+        COMMENT "Creating disk.tar"
+        VERBATIM
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/disk
+)
+
+# disk.tar を生成するカスタムターゲット
+add_custom_target(disk_tar
+        DEPENDS disk.tar
+)
+
 # ======== shell.bin.o を生成するカスタムターゲット ========
 add_custom_target(shell_bin_o
         DEPENDS shell.bin.o
@@ -60,8 +78,11 @@ add_custom_target(shell_bin_o
 
 # ======== kernel.elf に shell.bin.o をリンクする ========
 # kernel.elf に shell.bin.o を追加するための設定
-add_dependencies(kernel.elf shell_bin_o)
+add_dependencies(kernel.elf shell_bin_o disk_tar)
 target_sources(kernel.elf PRIVATE ${CMAKE_BINARY_DIR}/shell.bin.o)
+
+# lorem.txt をビルドディレクトリにコピー
+configure_file(lorem.txt ${CMAKE_BINARY_DIR}/lorem.txt COPYONLY)
 
 
 # QEMU 実行を run ターゲットとして定義
@@ -73,6 +94,8 @@ add_custom_target(run
         -serial mon:stdio
         --no-reboot
         -kernel kernel.elf
+        -drive id=drive0,file=disk.tar,format=raw,if=none
+        -device virtio-blk-device,drive=drive0,bus=virtio-mmio-bus.0
         DEPENDS kernel.elf
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Running QEMU with kernel.elf..."
