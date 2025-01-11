@@ -11,11 +11,20 @@
 #define PROC_RUNNABLE 1 // 実行可能なプロセス管理構造体
 #define KERNEL_STACK_SIZE 8192
 
+// ページテーブルエントリ
+#define SATP_SV32 (1u << 31)
+#define PAGE_V (1u << 0) // 有効ビット
+#define PAGE_R (1u << 1) // 読み込み可能
+#define PAGE_W (1u << 2) // 書き込み可能
+#define PAGE_X (1u << 3) // 実行可能
+#define PAGE_U (1u << 4) // ユーザーモードで実行可能
+
 struct process
 {
   int pid;
   int state;
   vaddr_t sp;
+  uint32_t *page_table;
   uint8_t stack[KERNEL_STACK_SIZE];
 };
 
