@@ -34,6 +34,9 @@ void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags);
 void user_entry(void);
 void handle_syscall(struct trap_frame *tf);
 long getchar(void);
+struct file *fs_lookup(const char *filename);
+void fs_init(void);
+void fs_flush(void);
 
 __attribute__((naked))
 __attribute__((aligned(4)))
@@ -405,17 +408,17 @@ void user_entry(void)
     "sret\n"
     :
     : [sepc] "r"(USER_BASE),
-  [sstatus] "r"(SSTATUS_SPIE)
+  [sstatus] "r"(SSTATUS_SPIE | SSTATUS_SAM)
   );
 }
 
-void handle_syscall(struct trap_frame *tf)
+void handle_syscall(struct trap_frame *f)
 {
-  switch (tf->a3)
+  switch (f->a3)
   {
     case SYS_PUTCHAR:
     {
-      putchar(tf->a0);
+      putchar(f->a0);
       break;
     }
     case SYS_GETCHAR:
@@ -425,7 +428,7 @@ void handle_syscall(struct trap_frame *tf)
         long ch = getchar();
         if (ch >= 0)
         {
-          tf->a0 = ch;
+          f->a0 = ch;
           break;
         }
 
@@ -440,9 +443,42 @@ void handle_syscall(struct trap_frame *tf)
       yield();
       PANIC("should not reach here");
     }
+    case SYS_READFILE:
+    case SYS_WRITEFILE:
+    {
+      const char *filename = (const char *) f->a0;
+      char *buf = (char *) f->a1;
+      int len = f->a2;
+      struct file *file = fs_lookup(filename);
+      if (!file)
+      {
+        printf("file not found: %s\n", filename);
+        f->a0 = -1;
+        break;
+      }
+
+      if (len > (int) sizeof(file->data))
+      {
+        len = file->size;
+      }
+
+      if (f->a3 == SYS_WRITEFILE)
+      {
+        memcpy(file->data, buf, len);
+        file->size = len;
+        fs_flush();
+      }
+      else
+      {
+        memcpy(buf, file->data, len);
+      }
+
+      f->a0 = len;
+      break;
+    }
     default:
     {
-      PANIC("unexpected syscall a3=%x\n", tf->a3);
+      PANIC("unexpected syscall a3=%x\n", f->a3);
     }
   }
 }
@@ -640,6 +676,72 @@ void fs_init(void)
 
     off += align_up(sizeof(struct tar_header) + filesz, SECTOR_SIZE);
   }
+}
+
+void fs_flush(void)
+{
+  // files変数の各ファイルの内容をdisk変数に書き込む
+  memset(disk, 0, sizeof(disk));
+  unsigned off = 0;
+  for (int file_i = 0; file_i < FILES_MAX; file_i++)
+  {
+    struct file *file = &files[file_i];
+    if (!file->in_use)
+    {
+      continue;
+    }
+
+    struct tar_header *header = (struct tar_header *) &disk[off];
+    memset(header, 0, sizeof(*header));
+    strcpy(header->name, file->name);
+    strcpy(header->mode, "000644");
+    strcpy(header->magic, "ustar");
+    strcpy(header->version, "00");
+    header->type = '0';
+
+    // ファイルサイズを8進数文字列に変換
+    int filesz = file->size;
+    for (int i = sizeof(header->size); i > 0; i--)
+    {
+      header->size[i - 1] = (filesz % 8) + '0';
+      filesz /= 8;
+    }
+
+    // チェックサムを計算
+    int checksum = ' ' * sizeof(header->checksum);
+    for (unsigned i = 0; i < sizeof(struct tar_header); i++)
+      checksum += (unsigned char) disk[off + i];
+
+    for (int i = 5; i >= 0; i--)
+    {
+      header->checksum[i] = (checksum % 8) + '0';
+      checksum /= 8;
+    }
+
+    // ファイルデータをコピー
+    memcpy(header->data, file->data, file->size);
+    off += align_up(sizeof(struct tar_header) + file->size, SECTOR_SIZE);
+  }
+
+  // disk変数の内容をディスクに書き込む
+  for (unsigned sector = 0; sector < sizeof(disk) / SECTOR_SIZE; sector++)
+    read_write_disk(&disk[sector * SECTOR_SIZE], sector, true);
+
+  printf("wrote %d bytes to disk\n", sizeof(disk));
+}
+
+struct file *fs_lookup(const char *filename)
+{
+  for (int i = 0; i < FILES_MAX; i++)
+  {
+    struct file *file = &files[i];
+    if (!strcmp(file->name, filename))
+    {
+      return file;
+    }
+  }
+
+  return NULL;
 }
 
 void kernel_main(void)

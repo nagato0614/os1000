@@ -23,6 +23,7 @@
 #define PAGE_U (1u << 4) // ユーザーモードで実行可能
 
 #define SSTATUS_SPIE (1u << 5)
+#define SSTATUS_SAM (1u << 18)
 
 #define USER_BASE 0x1000000
 
