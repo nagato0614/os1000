@@ -1,16 +1,15 @@
-//
-// Created by toru on 2025/01/11.
-//
-
-#ifndef OS1000__USER_H_
-#define OS1000__USER_H_
-
+#pragma once
 #include "common.h"
 
-__attribute__((noreturn)) void exit(void);
+struct sysret
+{
+  int a0;
+  int a1;
+  int a2;
+};
+
 void putchar(char ch);
 int getchar(void);
 int readfile(const char *filename, char *buf, int len);
 int writefile(const char *filename, const char *buf, int len);
-
-#endif //OS1000__USER_H_
+__attribute__((noreturn)) void exit(void);

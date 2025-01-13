@@ -3,7 +3,7 @@
 //
 #include "user.h"
 
-void main(void)
+int main(void)
 {
   while (1)
   {
@@ -54,4 +54,6 @@ void main(void)
       printf("unknown command: %s\n", cmdline);
     }
   }
+
+  return 0;
 }

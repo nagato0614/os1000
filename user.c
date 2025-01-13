@@ -1,40 +1,6 @@
-//
-// Created by toru on 2025/01/11.
-//
 #include "user.h"
 
 extern char __stack_top[];
-
-// プロトタイプ宣言
-int syscall(int sysno, int arg0, int arg1, int arg2);
-
-__attribute__((noreturn)) void exit(void)
-{
-  printf("exit\n");
-  syscall(SYS_EXIT, 0, 0, 0);
-  for (;;);
-}
-
-void putchar(char c)
-{
-  syscall(SYS_PUTCHAR, c, 0, 0);
-}
-
-int getchar(void)
-{
-  return syscall(SYS_GETCHAR, 0, 0, 0);
-}
-
-__attribute__((section(".text.start")))
-__attribute__((naked))
-void start(void)
-{
-  __asm__ __volatile__(
-    "mv sp, %[stack_top]\n"
-    "call main\n"
-    "call exit\n":: [stack_top] "r"(__stack_top)
-  );
-}
 
 int syscall(int sysno, int arg0, int arg1, int arg2)
 {
@@ -43,14 +9,22 @@ int syscall(int sysno, int arg0, int arg1, int arg2)
   register int a2 __asm__("a2") = arg2;
   register int a3 __asm__("a3") = sysno;
 
-  __asm__ __volatile__(
-    "ecall"
+  __asm__ __volatile__("ecall"
     : "=r"(a0)
     : "r"(a0), "r"(a1), "r"(a2), "r"(a3)
-    : "memory"
-    );
+    : "memory");
 
   return a0;
+}
+
+void putchar(char ch)
+{
+  syscall(SYS_PUTCHAR, ch, 0, 0);
+}
+
+int getchar(void)
+{
+  return syscall(SYS_GETCHAR, 0, 0, 0);
 }
 
 int readfile(const char *filename, char *buf, int len)
@@ -61,4 +35,20 @@ int readfile(const char *filename, char *buf, int len)
 int writefile(const char *filename, const char *buf, int len)
 {
   return syscall(SYS_WRITEFILE, (int) filename, (int) buf, len);
+}
+
+__attribute__((noreturn)) void exit(void)
+{
+  syscall(SYS_EXIT, 0, 0, 0);
+  for (;;);
+}
+
+__attribute__((section(".text.start")))
+__attribute__((naked))
+void start(void)
+{
+  __asm__ __volatile__(
+    "mv sp, %[stack_top]\n"
+    "call main\n"
+    "call exit\n"::[stack_top] "r"(__stack_top));
 }
