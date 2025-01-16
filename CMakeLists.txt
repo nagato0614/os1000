@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.28)
 project(os1000 C)
 
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/riscv32-toolchain.cmake")
+
 set(CMAKE_C_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(OBJCOPY /opt/homebrew/opt/llvm/bin/llvm-objcopy)
 
 # main.c と common.c をコンパイルし、kernel.elf を出力

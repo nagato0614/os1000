@@ -4,6 +4,11 @@
 
 #ifndef OS1000__KERNEL_H_
 #define OS1000__KERNEL_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common.h"
 
 #define PROCS_MAX 8     // プロセス数の最大値
@@ -202,5 +207,9 @@ struct file
   char data[1024];  // ファイルの内容
   size_t size;      // ファイルサイズ
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //OS1000__KERNEL_H_

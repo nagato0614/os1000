@@ -18,5 +18,5 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "")
 set(CMAKE_OSX_SYSROOT "")
 
 # C_FLAGS に必要なクロスコンパイル用オプションを追加
-# 例: -O2, -g3, -Wall, -Wextra などは適宜調整
 set(CMAKE_C_FLAGS "-std=c17 -O2 -g3 -Wall -Wextra --target=riscv32 -ffreestanding -nostdlib")
+set(CMAKE_CXX_FLAGS "-std=c++17 -O2 -g3 -Wall -Wextra --target=riscv32 -ffreestanding -nostdlib")

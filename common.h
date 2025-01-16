@@ -1,4 +1,9 @@
-#pragma once
+#ifndef OS1000__COMMON_H_
+#define OS1000__COMMON_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef int bool;
 typedef unsigned char uint8_t;
@@ -31,3 +36,9 @@ void *memcpy(void *dst, const void *src, size_t n);
 char *strcpy(char *dst, const char *src);
 int strcmp(const char *s1, const char *s2);
 void printf(const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // OS1000__COMMON_H_
