@@ -7,6 +7,8 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 20)
 set(OBJCOPY /opt/homebrew/opt/llvm/bin/llvm-objcopy)
 
+include(cmake/function.cmake)
+
 file(GLOB_RECURSE KERNEL_SOURCES kernel/*.c)
 file(GLOB_RECURSE USER_SOURCES user/*.c)
 file(GLOB_RECURSE STDLIB_SOURCES stdlib/*.c)
@@ -27,51 +29,15 @@ target_include_directories(kernel.elf PRIVATE
         user
 )
 
-# ユーザー空間で動かすプログラム
-add_executable(shell.elf
-        user_scripts/shell/shell.c
-        ${USER_SOURCES}
-        ${STDLIB_SOURCES}
-)
+# 指定したユーザープログラムをビルドしてカーネルにリンクする
+add_user_executable(shell)
 
-target_include_directories(shell.elf PRIVATE
-        user
-)
 
 # リンカスクリプト (kernel.ld) がある場合は明示的に指定
 # -Wl,-Map=kernel.map でマップファイルも生成
 target_link_options(kernel.elf PRIVATE
         "-T${CMAKE_SOURCE_DIR}/ld/kernel.ld"
         "-Wl,-Map=kernel.map"
-)
-
-# リンカスクリプト (user.ld) がある場合は明示的に指定
-# -Wl,-Map=user.map でマップファイルも生成
-target_link_options(shell.elf PRIVATE
-        "-T${CMAKE_SOURCE_DIR}/ld/user.ld"
-        "-Wl,-Map=user.map"
-)
-
-# ======== shell.elf から shell.bin を生成するカスタムコマンド ========
-
-# shell.elf を shell.bin に変換
-add_custom_command(
-        OUTPUT shell.bin
-        COMMAND ${OBJCOPY} --set-section-flags .bss=alloc,contents -O binary shell.elf shell.bin
-        DEPENDS shell.elf
-        COMMENT "Converting shell.elf to shell.bin"
-        VERBATIM
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
-
-# shell.bin を shell.bin.o に変換
-add_custom_command(
-        OUTPUT shell.bin.o
-        COMMAND ${OBJCOPY} -I binary -O elf32-littleriscv shell.bin shell.bin.o
-        DEPENDS shell.bin
-        COMMENT "Converting shell.bin to shell.bin.o"
-        VERBATIM
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 # disk ディレクトリを丸ごとビルドディレクトリにコピー
@@ -92,15 +58,7 @@ add_custom_target(disk_tar
         DEPENDS disk.tar
 )
 
-# ======== shell.bin.o を生成するカスタムターゲット ========
-add_custom_target(shell_bin_o
-        DEPENDS shell.bin.o
-)
-
-# ======== kernel.elf に shell.bin.o をリンクする ========
-# kernel.elf に shell.bin.o を追加するための設定
-add_dependencies(kernel.elf shell_bin_o disk_tar)
-target_sources(kernel.elf PRIVATE ${CMAKE_BINARY_DIR}/shell.bin.o)
+add_dependencies(kernel.elf disk_tar)
 
 # lorem.txt をビルドディレクトリにコピー
 configure_file(lorem.txt ${CMAKE_BINARY_DIR}/lorem.txt COPYONLY)
