@@ -2,6 +2,7 @@
 // Created by toru on 2025/01/11.
 //
 #include "user.h"
+#define DELETE_KEY 0x7f
 
 int main(void)
 {
@@ -13,7 +14,6 @@ int main(void)
     for (int i = 0;; i++)
     {
       char ch = getchar();
-      putchar(ch);
       if (i == sizeof(cmdline) - 1)
       {
         printf("command too long\n");
@@ -27,7 +27,26 @@ int main(void)
       }
       else
       {
+        // バックスペースの場合
+        if (ch == DELETE_KEY)
+        {
+          if (i > 0)
+          {
+            i--;
+            printf("\b \b");
+          }
+          continue;
+        }
+
         cmdline[i] = ch;
+
+
+        //カーソルを先頭に戻す
+        printf("\r> ");
+        for (int j = 0; j <= i; j++)
+        {
+          putchar(cmdline[j]);
+        }
       }
     }
     if (strcmp(cmdline, "hello") == 0)
