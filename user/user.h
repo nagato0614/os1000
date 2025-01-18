@@ -1,7 +1,7 @@
 #ifndef OS1000__USER_H_
 #define OS1000__USER_H_
 
-#include "common.h"
+#include "../stdlib/common.h"
 
 #ifdef __cplusplus
 extern "C" {

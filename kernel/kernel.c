@@ -1,5 +1,5 @@
 #include "kernel.h"
-#include "common.h"
+#include "../stdlib/common.h"
 
 extern char __bss[];
 extern char __bss_end[];
@@ -24,7 +24,6 @@ uint8_t disk[DISK_MAX_SIZE];
 
 // プロトタイプ宣言
 void handle_trap(struct trap_frame *f);
-void putchar(char ch);
 void switch_context(uint32_t *prev_sp, uint32_t *next_sp);
 void yield(void);
 void kernel_main(void);
@@ -170,11 +169,6 @@ struct sbiret sbi_call(
     );
 
   return (struct sbiret) {.error = a0, .value = a1};
-}
-
-void putchar(char ch)
-{
-  sbi_call(ch, 0, 0, 0, 0, 0, 0, 1);
 }
 
 __attribute__((section(".text.boot")))
@@ -764,4 +758,8 @@ void kernel_main(void)
 
   yield();
   PANIC("booted!");
+}
+
+void putchar(char ch) {
+  sbi_call(ch, 0, 0, 0, 0, 0, 0, 1 /* Console Putchar */);
 }

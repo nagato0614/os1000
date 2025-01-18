@@ -7,30 +7,48 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 20)
 set(OBJCOPY /opt/homebrew/opt/llvm/bin/llvm-objcopy)
 
+file(GLOB_RECURSE KERNEL_SOURCES kernel/*.c)
+file(GLOB_RECURSE USER_SOURCES user/*.c)
+file(GLOB_RECURSE STDLIB_SOURCES stdlib/*.c)
+
+
 # main.c と common.c をコンパイルし、kernel.elf を出力
 add_executable(kernel.elf
-        kernel.c
-        common.c
+        ${KERNEL_SOURCES}
+        ${STDLIB_SOURCES}
+)
+
+# kernel.elf をビルドするときだけ __KERNEL__ を定義
+target_compile_definitions(kernel.elf PRIVATE
+        __KERNEL__
+)
+
+target_include_directories(kernel.elf PRIVATE
+        user
 )
 
 # ユーザー空間で動かすプログラム
 add_executable(shell.elf
-        shell.c
-        common.c
-        user.c
+        shell/shell.c
+        ${USER_SOURCES}
+        ${STDLIB_SOURCES}
+)
+
+target_include_directories(shell.elf PRIVATE
+        user
 )
 
 # リンカスクリプト (kernel.ld) がある場合は明示的に指定
 # -Wl,-Map=kernel.map でマップファイルも生成
 target_link_options(kernel.elf PRIVATE
-        "-T${CMAKE_SOURCE_DIR}/kernel.ld"
+        "-T${CMAKE_SOURCE_DIR}/ld/kernel.ld"
         "-Wl,-Map=kernel.map"
 )
 
 # リンカスクリプト (user.ld) がある場合は明示的に指定
 # -Wl,-Map=user.map でマップファイルも生成
 target_link_options(shell.elf PRIVATE
-        "-T${CMAKE_SOURCE_DIR}/user.ld"
+        "-T${CMAKE_SOURCE_DIR}/ld/user.ld"
         "-Wl,-Map=user.map"
 )
 

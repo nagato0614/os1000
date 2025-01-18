@@ -52,3 +52,4 @@ void start(void)
     "call main\n"
     "call exit\n"::[stack_top] "r"(__stack_top));
 }
+
