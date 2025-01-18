@@ -32,7 +32,8 @@ int main(void)
         {
           if (i > 0)
           {
-            i--;
+            i -= 1;
+            // 1文字削除
             printf("\b \b");
           }
           continue;

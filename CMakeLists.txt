@@ -29,7 +29,7 @@ target_include_directories(kernel.elf PRIVATE
 
 # ユーザー空間で動かすプログラム
 add_executable(shell.elf
-        shell/shell.c
+        user_scripts/shell/shell.c
         ${USER_SOURCES}
         ${STDLIB_SOURCES}
 )
