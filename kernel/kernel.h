@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#include "../stdlib/common.h"
+#include "common.h"
 
 #define PROCS_MAX 8     // プロセス数の最大値
 #define PROC_UNUSED 0   // 未使用のプロセス管理構造体

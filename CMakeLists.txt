@@ -26,7 +26,8 @@ target_compile_definitions(kernel.elf PRIVATE
 )
 
 target_include_directories(kernel.elf PRIVATE
-        user
+        ${CMAKE_CURRENT_SOURCE_DIR}/kernel
+        ${CMAKE_CURRENT_SOURCE_DIR}/stdlib
 )
 
 # 指定したユーザープログラムをビルドしてカーネルにリンクする

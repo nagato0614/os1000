@@ -1,5 +1,4 @@
 #include "kernel.h"
-#include "../stdlib/common.h"
 
 extern char __bss[];
 extern char __bss_end[];

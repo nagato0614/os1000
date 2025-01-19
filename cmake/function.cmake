@@ -12,7 +12,8 @@ function(add_user_executable target)
     )
 
     target_include_directories(${target}.elf PRIVATE
-            user
+            ${CMAKE_CURRENT_SOURCE_DIR}/user
+            ${CMAKE_CURRENT_SOURCE_DIR}/stdlib
     )
 
     # リンカスクリプト (user.ld) がある場合は明示的に指定
