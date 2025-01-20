@@ -69,6 +69,15 @@ int main(void)
     {
       writefile("hello.txt", "Hello from shell!\n", 19);
     }
+    else if (strcmp(cmdline, "size") == 0)
+    {
+      printf("sizeof(char) = %d[byte]\n", sizeof(char));
+      printf("sizeof(int) = %d[byte]\n", sizeof(int));
+      printf("sizeof(long) = %d[byte]\n", sizeof(long));
+      printf("sizeof(long long) = %d[byte]\n", sizeof(long long));
+      printf("sizeof(float) = %d[byte]\n", sizeof(float));
+      printf("sizeof(double) = %d[byte]\n", sizeof(double));
+    }
     else
     {
       printf("unknown command: %s\n", cmdline);
